@@ -20,3 +20,7 @@ pnpm-debug.log*
 # build output
 dist/
 build/
+
+# auxiliary
+helpful-tips.txt
+git-branching.txt
