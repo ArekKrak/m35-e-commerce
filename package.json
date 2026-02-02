@@ -1,0 +1,14 @@
+{
+  "name": "m35-ecommerce-rest-api",
+  "version": "1.0.0",
+  "description": "A fully-functioning e-commerce application REST API that allows users to perform various CRUD operations such as registering an account, etc.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "arek",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
