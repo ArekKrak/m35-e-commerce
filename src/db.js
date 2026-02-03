@@ -7,10 +7,8 @@ const pool = new Pool({
   port: 5432
 });
 
-async function run() {
-  const result = await pool.query('SELECT NOW()');
-  console.log(result.rows);
-  await pool.end();
+function query(text, params) {
+  return pool.query(text, params);
 }
 
-run();
+module.exports = { query };
