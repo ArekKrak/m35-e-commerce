@@ -1,12 +1,17 @@
 const db = require('./db.js');
 const bcrypt = require('bcrypt');
 const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
 const app = express();
 const PORT = 3000;
 
 // Mental model: Before any route runs, parse incoming JSON and attach it
 // to `req.body`.
 app.use(express.json());
+app.use(session({ secret: 'dev_secret', resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get('/', (req, res) => {
   res.send('Server running.')
@@ -22,7 +27,6 @@ app.post('/register', async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });
   }
-  // 3. Otherwise, return 200
   const passwordHash = await bcrypt.hash(password, 10);
   // try block to throw a clean API response should the same email be registered
   // twice.
