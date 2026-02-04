@@ -1,8 +1,9 @@
-const db = require('./db.js');
+const db = require('./db');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
+const LocalStrategy = require('passport-local');
 const app = express();
 const PORT = 3000;
 
@@ -13,8 +14,50 @@ app.use(session({ secret: 'dev_secret', resave: false, saveUninitialized: false 
 app.use(passport.initialize());
 app.use(passport.session());
 
+passport.use(new LocalStrategy.Strategy(
+    { usernameField: 'email' }, async (email, password, done) => {
+      try {
+        const result = await db.query(
+          'SELECT id, email, password_hash FROM users WHERE email = $1', [email]
+        );
+        const user = result.rows[0];
+        if (!user) return done(null, false);
+        const ok = await bcrypt.compare(password, user.password_hash);
+        if (!ok) return done(null, false);
+      
+        return done(null, { id: user.id, email: user.email });
+      } catch (err) {
+        return done(err);
+      }
+    }
+  )
+);
+// serializeUser: store only the user id
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+// deserializeUser: load user by id from DB
+passport.deserializeUser(async (id, done) => {
+  try {
+    const result = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    const user = result.rows[0];
+    if (!user) return done(null, false);
+    return done(null, user);
+  } catch (err) {
+    return done(err);
+  }
+});
+
+app.post('/login', passport.authenticate('local'), (req, res) => {
+  res.json({ id: req.user.id, email: req.user.email });
+});
+
 app.get('/', (req, res) => {
   res.send('Server running.')
+});
+app.get('/me', (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'not logged in' })
+  return res.json(req.user);
 });
 
 // Prove the route exists and receives data using /register handler
