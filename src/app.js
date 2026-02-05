@@ -1,4 +1,5 @@
 const db = require('./db');
+const productsRoutes = require('./products.routes');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const session = require('express-session');
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(session({ secret: 'dev_secret', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use('/products', productsRoutes);
 
 passport.use(new LocalStrategy.Strategy(
     { usernameField: 'email' }, async (email, password, done) => {
