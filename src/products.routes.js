@@ -47,7 +47,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Category ID must be an integer' });
     }
   }
-  return res.status(501).json({ error: 'Not implemented yet' });
+  try {
+    const result = await db.query('INSERT INTO products (name, price, category_id) VALUES ($1, $2, $3) RETURNING id, name, price, category_id', [name, priceInt, categoryIdInt]);
+    return res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'invalid category_id' });
+    }
+    console.error(err);
+    return res.status(500).json({ error: 'internal server error' });
+  }
 });
 
 module.exports = router;
