@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     const filteredResult = await db.query('SELECT id, name, price, category_id FROM products WHERE category_id = $1 ORDER BY id', [categoryId]);
     return res.json(filteredResult.rows);
   }
-  const result = await db.query('SELECT * FROM products ORDER BY id');
+  const result = await db.query('SELECT id, name, price, category_id FROM products ORDER BY id');
   return res.json(result.rows);
 });
 
@@ -23,12 +23,31 @@ router.get('/:productId', async (req, res) => {
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: 'Product id must be an integer' });
   }
-  const idResult = await db.query ('SELECT * FROM products WHERE id = $1', [id]);
+  const idResult = await db.query ('SELECT id, name, price, category_id FROM products WHERE id = $1', [id]);
   if (idResult.rows.length === 0) {
     return res.status(404).json({ error: 'Product not found' });
   } else {
     return res.json(idResult.rows[0]);
   }
+});
+
+router.post('/', async (req, res) => {
+  const { name, price, category_id } = req.body;
+  if (!name || price === undefined) {
+    return res.status(400).json({ error: 'Resource missing' });
+  }
+  const priceInt = Number(price);
+  if (!Number.isInteger(priceInt) || priceInt < 0) {
+    return res.status(400).json({ error: 'Price must be an integer' });
+  }
+  let categoryIdInt = null;
+  if (category_id !== undefined && category_id !== null) {
+    categoryIdInt = Number(category_id);
+    if (!Number.isInteger(categoryIdInt)) {
+      return res.status(400).json({ error: 'Category ID must be an integer' });
+    }
+  }
+  return res.status(501).json({ error: 'Not implemented yet' });
 });
 
 module.exports = router;
