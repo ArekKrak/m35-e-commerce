@@ -58,5 +58,22 @@ router.post('/', async (req, res) => {
     return res.status(500).json({ error: 'internal server error' });
   }
 });
+router.put('/:productId', async (req, res) => {
+  const { productId } = req.params;
+  const productIdInt = Number(productId);
+  if (!Number.isInteger(productIdInt)) {
+    return res.status(400).json({ error: 'Product ID must be an integer' });
+  }
+  const { name, price, category_id } = req.body;
+  if (!name || price === undefined) {
+    return res.status(400).json({ error: 'Resource missing' });
+  }
+  const update = await db.query('UPDATE products SET name = $1, price = $2, category_id = $3 WHERE id = $4 RETURNING id, name, price, category_id', [productIdInt]);
+  if (update.rows.length === 0) {
+    return res.status(404).json({ error: 'Not found' });
+  } else {
+    return res.json(idResult.rows[0]);
+  }
+});
 
 module.exports = router;
