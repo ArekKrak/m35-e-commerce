@@ -38,4 +38,28 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
+router.put('/:userId', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  const id = Number(req.params.userId);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: 'User ID must be an integer' });
+  }
+  if (Number(req.user.id) !== id) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const { email, password } = req.body;
+  if (email === undefined && password === undefined) {
+    return res.status(400).json({ error: 'Resource missing' });
+  }
+  if (email !== undefined && password !== undefined) {
+    return res.json({ update: 'both' });
+  }
+  if (email !== undefined) {
+    return res.json({ update: 'email' });
+  }
+  return res.json({ update: 'password' });
+});
+
 module.exports = router;
