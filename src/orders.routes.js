@@ -2,6 +2,20 @@ const db = require('./db');
 const express = require('express');
 const router = express.Router();
 
+/**
+ * @openapi
+ * /orders:
+ *   get:
+ *     summary: List orders for the logged-in user
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of orders (id + created_at)
+ *       401:
+ *         description: Not logged in
+ */
+
 // Meaning: "Show me all orders I (the logged-in user) have placed"
 router.get('/', async (req, res) => {
   // Auth guard
@@ -17,6 +31,31 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 })
+
+/**
+ * @openapi
+ * /orders/{orderId}:
+ *   get:
+ *     summary: Get a single order (only if it belongs to the logged-in user)
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric order id
+ *     responses:
+ *       200:
+ *         description: Order detail (header + items)
+ *       400:
+ *         description: Invalid order ID
+ *       401:
+ *         description: Not logged in
+ *       404:
+ *         description: Order not found
+ */
 
 // Meaning: "Show me one specific order, but only if it's mine"
 router.get('/:orderId', async (req, res) => {
