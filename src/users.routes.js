@@ -3,6 +3,23 @@ const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
 
+/**
+ * @openapi
+ * /users:
+ *   get:
+ *     summary: List all users (requires login)
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of users (id + email)
+ *       401:
+ *         description: Not logged in
+ *       500:
+ *         description: Internal server error
+ */
+
 router.get('/', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Not logged in' });
@@ -15,6 +32,36 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+/**
+ * @openapi
+ * /users/{userId}:
+ *   get:
+ *     summary: Get a user by ID (only allowed for the logged-in user)
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User id (must match the logged-in user)
+ *     responses:
+ *       200:
+ *         description: User object (id + email)
+ *       400:
+ *         description: User ID must be an integer
+ *       401:
+ *         description: Not logged in
+ *       403:
+ *         description: Forbidden (Cannot access other users)
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
 
 router.get('/:userId', async (req, res) => {
   if (!req.user) {
@@ -38,6 +85,50 @@ router.get('/:userId', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+/**
+ * @openapi
+ * /users/{userId}:
+ *   put:
+ *     summary: Update user email and/or password (only allowed for the logged-in user)
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User id (must match the logged-in user)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             description: Provide email, password, or both
+ *     responses:
+ *       200:
+ *         description: Updated user (id + email)
+ *       400:
+ *         description: Invalid input (missing/empty fields or invalid user ID)
+ *       401:
+ *         description: Not logged in
+ *       403:
+ *         description: Forbidden (Cannot update other users)
+ *       404:
+ *         description: User not found
+ *       409:
+ *         description: Email already in use
+ *       500:
+ *         description: Internal server error
+ */
 
 router.put('/:userId', async (req, res) => {
   if (!req.user) {

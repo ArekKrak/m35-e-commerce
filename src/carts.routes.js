@@ -2,6 +2,35 @@ const db = require('./db');
 const express = require('express');
 const router = express.Router();
 
+/**
+ * @openapi
+ * /carts/{cartId}/checkout:
+ *   post:
+ *     summary: Checkout a cart (creates an order and copies cart items)
+ *     tags: [Carts]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: cartId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       201:
+ *         description: Order created
+ *       400:
+ *         description: Invalid cart ID or cart is empty
+ *       401:
+ *         description: Not logged in
+ *       404:
+ *         description: Cart not found
+ *       409:
+ *         description: Cart already checked out
+ *       500:
+ *         description: Internal server error
+ */
+
 router.post('/:cartId/checkout', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Not logged in' });
@@ -45,6 +74,45 @@ router.post('/:cartId/checkout', async (req, res) => {
     client.release();
   }
 });
+
+/**
+ * @openapi
+ * /carts/{cartId}:
+ *   post:
+ *     summary: Add or update a product in a cart (UPSERT quantity)
+ *     tags: [Carts]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: cartId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *             required: [productId, quantity]
+ *     responses:
+ *       200:
+ *         description: Item stored (cart_id, product_id, quantity)
+ *       400:
+ *         description: Invalid input (cart ID, product ID, or quantity)
+ *       401:
+ *         description: Not logged in
+ *       404:
+ *         description: Cart not found or product not found
+ *       500:
+ *         description: Internal server error
+ */
 
 router.post('/:cartId', async (req, res) => {
   // Cart belongs to a user, so auth is mandatory
@@ -91,6 +159,23 @@ router.post('/:cartId', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /carts:
+ *   post:
+ *     summary: Create a new cart for the logged-in user
+ *     tags: [Carts]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       201:
+ *         description: Cart created
+ *       401:
+ *         description: Not logged in
+ *       500:
+ *         description: Internal server error
+ */
+
 router.post('/', async (req, res) => {
   // Auth guard
   if (!req.user) {
@@ -108,6 +193,34 @@ router.post('/', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+/**
+ * @openapi
+ * /carts/{cartId}:
+ *   get:
+ *     summary: Get a cart (only if it belongs to the logged-in user)
+ *     tags: [Carts]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: cartId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric cart id
+ *     responses:
+ *       200:
+ *         description: Cart detail (header + items)
+ *       400:
+ *         description: Invalid cart ID
+ *       401:
+ *         description: Not logged in
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Internal server error
+ */
 
 router.get('/:cartId', async (req, res) => {
   if (!req.user) {
