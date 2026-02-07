@@ -7,6 +7,7 @@ const router = express.Router();
  * /orders:
  *   get:
  *     summary: List orders for the logged-in user
+ *     tags: [Orders]
  *     security:
  *       - cookieAuth: []
  *     responses:
@@ -37,6 +38,7 @@ router.get('/', async (req, res) => {
  * /orders/{orderId}:
  *   get:
  *     summary: Get a single order (only if it belongs to the logged-in user)
+ *     tags: [Orders]
  *     security:
  *       - cookieAuth: []
  *     parameters:
