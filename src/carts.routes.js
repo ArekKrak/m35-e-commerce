@@ -109,4 +109,38 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:cartId', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  // Parse cartId
+  const cartId = Number(req.params.cartId);
+  if (Number.isNaN(cartId)) {
+    return res.status(400).json({ error: 'Invalid cart ID' });
+  }
+  // `try/catch` block for a controlled API response
+  try {
+    // Source of truth
+    const userId = req.user.id;
+    const cart = await db.query('SELECT id, user_id FROM carts WHERE id = $1 AND user_id = $2', [cartId, userId]);
+    if (cart.rows.length === 0) {
+      return res.status(404).json({ error: 'Cart not found' });
+    }
+    // Fetch cart line items
+    const items = await db.query('SELECT product_id, quantity FROM cart_items WHERE cart_id = $1 ORDER BY product_id', [cartId]);
+    // Return a client-friendly response shape; `items` is a simple list that the frontend can display
+    return res.json({
+      id: cart.rows[0].id,
+      userId: cart.rows[0].user_id,
+      items: items.rows.map(r => ({
+        productId: r.product_id,
+        quantity: r.quantity
+      }))
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
