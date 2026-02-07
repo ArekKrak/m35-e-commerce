@@ -1,4 +1,5 @@
 const db = require('./db');
+const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
 
@@ -54,12 +55,56 @@ router.put('/:userId', async (req, res) => {
     return res.status(400).json({ error: 'Resource missing' });
   }
   if (email !== undefined && password !== undefined) {
-    return res.json({ update: 'both' });
+    if (typeof email !== 'string' || email.trim() === '' || typeof password !== 'string' || password.trim() === '') {
+      return res.status(400).json({ error: 'Resource(s) missing' });
+    }
+    try {
+      const newHash = await bcrypt.hash(password, 10);
+      const updated = await db.query('UPDATE users SET email = $1, password_hash = $2 WHERE id = $3 RETURNING id, email', [email.trim(), newHash, id]);
+      if (updated.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      return res.json(updated.rows[0]);
+    } catch (err) {
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'Email already in use' });
+      }
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   }
   if (email !== undefined) {
-    return res.json({ update: 'email' });
+    if (typeof email !== 'string' || email.trim() === '') {
+      return res.status(400).json({ error: 'Email must be a non-empty string' });
+    }
+    try {
+      const updated = await db.query('UPDATE users SET email = $1 WHERE id = $2 RETURNING id, email', [email.trim(), id]);
+      if (updated.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      return res.json(updated.rows[0]);
+    } catch (err) {
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'Email already in use' });
+      }
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   }
-  return res.json({ update: 'password' });
+  if (typeof password !== 'string' || password.trim() === '') {
+    return res.status(400).json({ error: 'Password must not be empty' });
+  }
+  try {
+    const newHash = await bcrypt.hash(password, 10);
+    const updated = await db.query('UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email', [newHash, id]);
+    if (updated.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    return res.json(updated.rows[0]);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 module.exports = router;
