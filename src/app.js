@@ -3,6 +3,8 @@ const productsRoutes = require('./products.routes');
 const usersRoutes = require('./users.routes');
 const cartsRoutes = require('./carts.routes');
 const ordersRoutes = require('./orders.routes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const session = require('express-session');
@@ -21,6 +23,7 @@ app.use('/products', productsRoutes);
 app.use('/users', usersRoutes);
 app.use('/carts', cartsRoutes);
 app.use('/orders', ordersRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 passport.use(new LocalStrategy.Strategy(
     { usernameField: 'email' }, async (email, password, done) => {
@@ -67,6 +70,8 @@ app.get('/me', (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'not logged in' })
   return res.json(req.user);
 });
+
+app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
 // Prove the route exists and receives data using /register handler
 app.post('/register', async (req, res) => {
