@@ -1,7 +1,8 @@
 const db = require('./db');
 const productsRoutes = require('./products.routes');
 const usersRoutes = require('./users.routes');
-const cartRoutes = require('./carts.routes');
+const cartsRoutes = require('./carts.routes');
+const ordersRoutes = require('./orders.routes');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const session = require('express-session');
@@ -18,7 +19,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use('/products', productsRoutes);
 app.use('/users', usersRoutes);
-app.use('/carts', cartRoutes);
+app.use('/carts', cartsRoutes);
+app.use('/orders', ordersRoutes);
 
 passport.use(new LocalStrategy.Strategy(
     { usernameField: 'email' }, async (email, password, done) => {
