@@ -2,6 +2,26 @@ const db = require('./db');
 const express = require('express');
 const router = express.Router();
 
+/**
+ * @openapi
+ * /products:
+ *   get:
+ *     summary: List all products (optionally filter by category)
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Filter by category ID
+ *     responses:
+ *       200:
+ *         description: Array of products
+ *       400:
+ *         description: Category must be an integer ID
+ */
+
 router.get('/', async (req, res) => {
   const { category } = req.query;
   // dummy JSON test line
@@ -18,6 +38,28 @@ router.get('/', async (req, res) => {
   return res.json(result.rows);
 });
 
+/**
+ * @openapi
+ * /products/{productId}:
+ *   get:
+ *     summary: Get a product by ID
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric product id
+ *     responses:
+ *       200:
+ *         description: Product object
+ *       400:
+ *         description: Product ID must be an integer
+ *       404:
+ *         description: Not found
+ */
+
 router.get('/:productId', async (req, res) => {
   const id = Number(req.params.productId);
   if (!Number.isInteger(id)) {
@@ -30,6 +72,36 @@ router.get('/:productId', async (req, res) => {
     return res.json(idResult.rows[0]);
   }
 });
+
+/**
+ * @openapi
+ * /products:
+ *   post:
+ *     summary: Create a product
+ *     tags: [Products]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: integer
+ *               category_id:
+ *                 type: integer
+ *                 nullable: true
+ *             required: [name, price]
+ *     responses:
+ *       201:
+ *         description: Product created
+ *       400:
+ *         description: Invalid input (missing fields, invalid price, or invalid category_id)
+ *       500:
+ *         description: Internal server error
+ */
 
 router.post('/', async (req, res) => {
   const { name, price, category_id } = req.body;
@@ -58,6 +130,46 @@ router.post('/', async (req, res) => {
     return res.status(500).json({ error: 'internal server error' });
   }
 });
+
+/**
+ * @openapi
+ * /products/{productId}:
+ *   put:
+ *     summary: Update a product
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric product id
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: integer
+ *               category_id:
+ *                 type: integer
+ *                 nullable: true
+ *             required: [name, price]
+ *     responses:
+ *       200:
+ *         description: Product updated
+ *       400:
+ *         description: Invalid input (missing fields, invalid price, or invalid category_id)
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal server error
+ */
+
 router.put('/:productId', async (req, res) => {
   const { productId } = req.params;
   const productIdInt = Number(productId);
@@ -95,6 +207,28 @@ router.put('/:productId', async (req, res) => {
     return res.json(update.rows[0]);
   }
 });
+
+/**
+ * @openapi
+ * /products/{productId}:
+ *   delete:
+ *     summary: Delete a product
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric product id
+ *     responses:
+ *       200:
+ *         description: Product updated
+ *       400:
+ *         description: Invalid input (missing fields, invalid price, or invalid category_id)
+ *       404:
+ *         description: Not found
+ */
 
 router.delete('/:productId', async (req, res) => {
   const id = Number(req.params.productId);
